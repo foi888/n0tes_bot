@@ -1,6 +1,6 @@
 import telebot
 from bot_config import token
-from keyboard import get_main_keyboard
+from keyboard import get_main_keyboard, get_notes_numbers_keyboard
 from database import *
 
 
@@ -13,14 +13,25 @@ def reaction_to_button(button):
     user_id = button.from_user.id
     if button.data == "show_notes":
         bot.send_message(user_id, text=get_formatted_notes(user_id))
-    if button.data == "add_note":
+    elif button.data == "add_note":
         users.update({user_id: {'title': None, 'description': None}})
-        msg = bot.send_message(user_id, text="введите название")
+        msg = bot.send_message(user_id, text="Введите название")
         bot.register_next_step_handler(msg, note_title_answer)
-    if button.data == 'delete_note':
-        pass
+    elif button.data == 'delete_note':
+        bot.send_message(user_id, text="Укажите номер заметки")
+        msg = bot.send_message(user_id, text=get_formatted_notes(user_id), reply_markup=get_notes_numbers_keyboard(user_id))
+        bot.register_next_step_handler(msg, delete_note_number_answer)
 
-        
+
+def delete_note_number_answer(message):
+    user_id = message.from_user.id
+    if message.text.isdigit():
+        note_number = int(message.text)
+        delete_note(note_number, user_id)
+    else:
+        msg = bot.send_message(user_id, text="Нужно нажать на кнопку с номером!")
+        bot.register_next_step_handler(msg, delete_note_number_answer)
+      
 
 def note_title_answer(message):
     users[message.from_user.id]["title"] = message.text
@@ -47,3 +58,4 @@ def reaction_to_text(message):
 
 
 bot.polling(none_stop=True, interval=0)
+

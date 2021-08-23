@@ -34,5 +34,12 @@ def send_note(user_id, title, description):
         return "Произошла ошибка. Попробуйте позже"
 
 
-
-        
+def delete_note(note_number, user_id):
+    notes = get_notes(user_id)
+    if note_number in range(1, len(notes)+1):
+        delete_id = notes[note_number-1]['_id']
+        url = "https://notes-70b5.restdb.io/rest/notes/" + delete_id
+        response = requests.request("DELETE", url, headers=headers)
+        return "Успешно удалено"
+    else:
+        print("Не лежит")
