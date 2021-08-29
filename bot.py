@@ -1,6 +1,6 @@
 import telebot
 from bot_config import token
-from keyboard import get_main_keyboard, get_notes_numbers_keyboard
+from keyboard import get_main_keyboard, get_notes_numbers_keyboard, get_notes_keyboard
 from database import *
 
 
@@ -21,13 +21,40 @@ def reaction_to_button(button):
         bot.send_message(user_id, text="Укажите номер заметки")
         msg = bot.send_message(user_id, text=get_formatted_notes(user_id), reply_markup=get_notes_numbers_keyboard(user_id))
         bot.register_next_step_handler(msg, delete_note_number_answer)
+    elif button.data == 'edit_note':
+        msg = bot.send_message(user_id, text='укажити заметку', reply_markup=get_notes_keyboard(user_id))
+        bot.register_next_step_handler(msg, edit_note_answer)
 
+
+def edit_note_answer(message):
+    user_id = message.from_user.id
+    edit_id = get_id_from_title(message.text)
+    users.update({user_id : {'edit_id': edit_id, 'title': None, 'description': None}})
+    msg = bot.send_message(user_id, text="Введите название")
+    bot.register_next_step_handler(msg, edit_title_answer)
+
+
+def edit_title_answer(message):
+    user_id = message.from_user.id
+    users[user_id]['title'] = message.text
+    msg = bot.send_message(user_id, text="Введите описание")
+    bot.register_next_step_handler(msg, edit_description_answer)
+
+
+def edit_description_answer(message):
+    users[message.from_user.id]['description'] = message.text
+    msg_text = edit_note(users[message.from_user.id]['edit_id'],
+              users[message.from_user.id]['title'],
+              users[message.from_user.id]['description'])
+    bot.send_message(message.from_user.id, msg_text)
+    
 
 def delete_note_number_answer(message):
     user_id = message.from_user.id
     if message.text.isdigit():
         note_number = int(message.text)
-        delete_note(note_number, user_id)
+        msg_text = delete_note(note_number, user_id)
+        bot.send_message(user_id, msg_text)
     else:
         msg = bot.send_message(user_id, text="Нужно нажать на кнопку с номером!")
         bot.register_next_step_handler(msg, delete_note_number_answer)
@@ -58,4 +85,3 @@ def reaction_to_text(message):
 
 
 bot.polling(none_stop=True, interval=0)
-

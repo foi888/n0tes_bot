@@ -24,4 +24,15 @@ def get_notes_numbers_keyboard(user_id):
     return keyboard
 
 
+def get_notes_keyboard(user_id):
+    keyboard = types.ReplyKeyboardMarkup()
+    notes = get_notes(user_id)
+    if notes:
+        for note in notes:
+            keyboard.add(types.KeyboardButton(note['Title']))
+    else:
+        button = types.KeyboardButton("продолжить")
+        keyboard.add(button)
+    return keyboard
+
 

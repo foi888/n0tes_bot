@@ -3,7 +3,6 @@ import json
 from bot_config import headers
 
 
-
 def get_notes(user_id):
     url = "https://notes-70b5.restdb.io/rest/notes?filter=" + str(user_id)
     response = requests.request("GET", url, headers=headers)
@@ -40,6 +39,30 @@ def delete_note(note_number, user_id):
         delete_id = notes[note_number-1]['_id']
         url = "https://notes-70b5.restdb.io/rest/notes/" + delete_id
         response = requests.request("DELETE", url, headers=headers)
-        return "Успешно удалено"
+        if response.ok:
+            return "Успешно удалено"
+        else:
+            return "Произошла ошибка. Попробуйте позже"
     else:
-        print("Не лежит")
+        return("Попробуйте снова, указав верный номер")
+
+
+
+def edit_note(note_id, title, description):
+    url = "https://notes-70b5.restdb.io/rest/notes/" + note_id
+    payload = json.dumps({'Title': title, 'Description': description})
+    response = requests.request("PUT", url, data=payload, headers=headers)
+    if response.ok:
+        return 'Успешно отредактировано'
+    else:
+        return 'Произошла ошибка. Попробуйте позже'
+
+
+
+
+
+def get_id_from_title(title):
+    url = "https://notes-70b5.restdb.io/rest/notes?filter=" + str(title)
+    response = requests.request("GET", url, headers=headers)
+    note = json.loads(response.text)[0]
+    return note['_id']
